@@ -474,17 +474,9 @@ curl "http://localhost:8000/report"
 4. **Advanced Learning** - Reinforcement learning for strategy optimization
 5. **Plugins** - Custom agent types for domain-specific problems
 
----
-
-## 📝 License
-
-MIT License - Feel free to use in hackathons and projects!
-
----
-
 ## 👨‍💻 Author Notes
 
-Built for hackathon success. Emphasize:
+ Emphasize:
 - **Autonomy** - Zero manual intervention
 - **Explainability** - Full decision logs
 - **Scalability** - Works on datasets from 100 to 1M+ rows
@@ -492,12 +484,12 @@ Built for hackathon success. Emphasize:
 
 ---
 
-## 🤝 Demo Script Walkthrough
+## 🤝  Walkthrough
 
 ```
 1. Load messy dataset (1000+ rows, multiple issues)
 2. Show original data quality metrics
-3. Run pipeline (takes ~30 seconds)
+3. Run pipeline 
 4. Display before/after comparison
 5. Show agent reasoning for key decisions
 6. Display final quality metrics
