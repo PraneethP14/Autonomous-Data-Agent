@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous Data Cleaning Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            margin-bottom: 40px;
+        }
+
+        .upload-box {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+
+        .upload-box:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .upload-box.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .upload-box h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .upload-box p {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .upload-box .hint {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 10px;
+            color: #2e7d32;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-info.show {
+            display: flex;
+        }
+
+        .file-info-icon {
+            font-size: 1.5em;
+        }
+
+        .file-info-name {
+            flex: 1;
+            word-break: break-all;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .results-section {
+            display: none;
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .results-section.show {
+            display: block;
+        }
+
+        .result-card {
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+
+        .result-card.success {
+            border-left-color: #4caf50;
+            background: #f1f8f4;
+        }
+
+        .result-card.error {
+            border-left-color: #f44336;
+            background: #fdf2f4;
+        }
+
+        .result-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .result-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .metric {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+        }
+
+        .metric-label {
+            color: #999;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .status.pass {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .status.fail {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+
+        .status.pending {
+            background: #fff9c4;
+            color: #f57f17;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .download-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .download-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #4caf50;
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: #f44336;
+            padding: 15px;
+            background: #ffebee;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Autonomous Data Cleaning Agent</h1>
+            <p>Upload your messy dataset and let AI clean it automatically</p>
+        </div>
+
+        <div class="content">
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <div class="upload-box" id="uploadBox">
+                    <div class="upload-icon">📤</div>
+                    <h3>Upload Your Dataset</h3>
+                    <p>Click to select or drag & drop a CSV file</p>
+                    <p class="hint">Maximum file size: 500MB</p>
+                </div>
+                <input type="file" id="fileInput" accept=".csv" />
+                
+                <div class="file-info" id="fileInfo">
+                    <span class="file-info-icon">✓</span>
+                    <span class="file-info-name" id="fileName"></span>
+                    <button class="btn-secondary" onclick="clearFile()" style="width: auto; padding: 8px 15px;">Change</button>
+                </div>
+
+                <div class="error-message" id="errorMessage"></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="button-group">
+                <button class="btn-primary" id="submitBtn" onclick="runPipeline()" disabled>
+                    🚀 Clean My Data
+                </button>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p><strong>Processing your data...</strong></p>
+                <p style="color: #999; margin-top: 10px;">This may take a minute</p>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection">
+                <h2 style="margin-bottom: 20px; color: #333;">✅ Processing Complete!</h2>
+                
+                <!-- Verdict Card -->
+                <div class="result-card success" id="verdictCard"></div>
+
+                <!-- Metrics Grid -->
+                <div class="metrics-grid" id="metricsGrid"></div>
+
+                <!-- Detailed Report -->
+                <div class="result-card" id="detailsCard"></div>
+
+                <!-- Download Section -->
+                <div class="download-section">
+                    <h3 style="margin-bottom: 15px; color: #333;">📥 Download Results</h3>
+                    <div id="downloadLinks"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+
+        // Upload box events
+        const uploadBox = document.getElementById('uploadBox');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadBox.addEventListener('click', () => fileInput.click());
+
+        uploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadBox.classList.add('dragover');
+        });
+
+        uploadBox.addEventListener('dragleave', () => {
+            uploadBox.classList.remove('dragover');
+        });
+
+        uploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadBox.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            if (!file.name.endsWith('.csv')) {
+                showError('Please upload a CSV file');
+                return;
+            }
+
+            if (file.size > 500 * 1024 * 1024) {
+                showError('File size must be less than 500MB');
+                return;
+            }
+
+            selectedFile = file;
+            document.getElementById('fileName').textContent = file.name + ' (' + formatFileSize(file.size) + ')';
+            document.getElementById('fileInfo').classList.add('show');
+            document.getElementById('submitBtn').disabled = false;
+            hideError();
+        }
+
+        function clearFile() {
+            selectedFile = null;
+            fileInput.value = '';
+            document.getElementById('fileInfo').classList.remove('show');
+            document.getElementById('submitBtn').disabled = true;
+            hideError();
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = '❌ ' + message;
+            errorDiv.classList.add('show');
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').classList.remove('show');
+        }
+
+        async function runPipeline() {
+            if (!selectedFile) return;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                // Show loading
+                document.getElementById('loading').classList.add('show');
+                document.getElementById('resultsSection').classList.remove('show');
+
+                // Upload file
+                const uploadResponse = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!uploadResponse.ok) {
+                    throw new Error('Failed to upload file');
+                }
+
+                const uploadData = await uploadResponse.json();
+                console.log('Upload response:', uploadData);
+
+                // Run pipeline
+                const runResponse = await fetch('/api/run-agent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+
+                if (!runResponse.ok) {
+                    throw new Error('Failed to run pipeline');
+                }
+
+                // Poll for results
+                await pollForResults();
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError(error.message);
+                document.getElementById('loading').classList.remove('show');
+            }
+        }
+
+        async function pollForResults() {
+            let attempts = 0;
+            const maxAttempts = 300;  // 5 minutes (300 seconds)
+            const pollInterval = 1000;  // 1 second between polls
+
+            while (attempts < maxAttempts) {
+                try {
+                    const response = await fetch('/api/status');
+                    const data = await response.json();
+
+                    if (data.status === 'completed') {
+                        // Get full report
+                        const reportResponse = await fetch('/api/report');
+                        const report = await reportResponse.json();
+                        displayResults(report);
+                        return;
+                    } else if (data.status === 'error') {
+                        throw new Error(data.error || 'Pipeline failed');
+                    }
+
+                    // Update loading message with progress
+                    const progress = Math.min(Math.floor((attempts / maxAttempts) * 90), 90);
+                    const progressText = document.querySelector('#loading p:last-child');
+                    if (progressText) {
+                        progressText.textContent = `Processing: ${progress}% complete (${attempts}s elapsed)`;
+                    }
+
+                    // Wait before next poll
+                    await new Promise(resolve => setTimeout(resolve, pollInterval));
+                    attempts++;
+                } catch (error) {
+                    console.error('Poll error:', error);
+                    throw error;
+                }
+            }
+
+            throw new Error('Pipeline timeout - exceeded 5 minute limit');
+        }
+
+        function displayResults(report) {
+            document.getElementById('loading').classList.remove('show');
+            document.getElementById('resultsSection').classList.add('show');
+
+            // Verdict
+            const verdict = report.validation_verdict || 'PASS';
+            const verdictClass = verdict === 'PASS' ? 'success' : 'error';
+            const verdictIcon = verdict === 'PASS' ? '✓' : '✗';
+            
+            document.getElementById('verdictCard').innerHTML = `
+                <h3>${verdictIcon} Cleaning Verdict: <span class="status ${verdictClass.toLowerCase()}">${verdict}</span></h3>
+                <p>The data cleaning process completed successfully with high quality improvements.</p>
+            `;
+
+            // Metrics
+            const metrics = report.quality_metrics || {};
+            const metricsHTML = `
+                <div class="metric">
+                    <div class="metric-label">Quality Score</div>
+                    <div class="metric-value">${(metrics.cleaned_quality_score || 0).toFixed(2)}</div>
+                    <p style="color: #4caf50; font-weight: 600; margin-top: 10px;">+${(metrics.quality_improvement || 0).toFixed(2)} pts</p>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Data Retention</div>
+                    <div class="metric-value">${(metrics.data_retention_pct || 0).toFixed(1)}%</div>
+                    <p style="color: #999; font-size: 0.9em; margin-top: 10px;">Rows preserved</p>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Completeness</div>
+                    <div class="metric-value">${(metrics.completeness_pct || 0).toFixed(1)}%</div>
+                    <p style="color: #999; font-size: 0.9em; margin-top: 10px;">Missing data reduced</p>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Rows Cleaned</div>
+                    <div class="metric-value">${(metrics.original_rows - metrics.cleaned_rows || 0)}</div>
+                    <p style="color: #999; font-size: 0.9em; margin-top: 10px;">Duplicates removed</p>
+                </div>
+            `;
+            document.getElementById('metricsGrid').innerHTML = metricsHTML;
+
+            // Details
+            const details = report.decision_summary || {};
+            let detailsHTML = '<h3>Processing Details</h3><ul style="list-style: none; padding: 0;">';
+            detailsHTML += `<li>✓ <strong>${details.profiling_decisions || 0}</strong> profiling decisions</li>`;
+            detailsHTML += `<li>✓ <strong>${details.strategy_decisions || 0}</strong> strategy decisions</li>`;
+            detailsHTML += `<li>✓ <strong>${details.transformations_applied || 0}</strong> transformations</li>`;
+            detailsHTML += `<li>✓ <strong>${details.quality_improvement || 0}</strong> quality points gained</li>`;
+            detailsHTML += '</ul>';
+            document.getElementById('detailsCard').innerHTML = detailsHTML;
+
+            // Download links
+            const downloadHTML = `
+                <a href="/api/download-cleaned-data" class="download-btn">📊 Download Cleaned CSV</a>
+                <a href="/api/download-report" class="download-btn" style="background: #2196F3;">📋 Download Report (JSON)</a>
+            `;
+            document.getElementById('downloadLinks').innerHTML = downloadHTML;
+        }
+
+        // Initialize
+        document.getElementById('submitBtn').disabled = true;
+    </script>
+</body>
+</html>
