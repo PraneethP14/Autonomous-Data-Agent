@@ -505,9 +505,7 @@ Built for hackathon success. Emphasize:
 8. Download cleaned data
 ```
 
-**Total Demo Time: 2-3 minutes**  
-**Impact: Judge sees full autonomous pipeline in real-time**
+
 
 ---
 
-Generated with ❤️ for the hackathon
